@@ -9,19 +9,34 @@ let auth: Auth;
 async function initFirebase() {
   if (!app) {
     try {
-      // Use a relative path so it works on subpaths (like GitHub Pages)
-      const response = await fetch('./firebase-applet-config.json');
-      if (!response.ok) {
-        console.warn("firebase-applet-config.json not found, core Firebase features disabled.");
+      // Try to find the config file. On GitHub Pages, it should be at the root of the project.
+      // We check the relative path first.
+      const paths = ['./firebase-applet-config.json', 'firebase-applet-config.json'];
+      let config = null;
+
+      for (const path of paths) {
+        try {
+          const response = await fetch(path);
+          if (response.ok) {
+            config = await response.json();
+            console.log(`Firebase config loaded from: ${path}`);
+            break;
+          }
+        } catch (e) {
+          // Continue to next path
+        }
+      }
+
+      if (!config) {
+        console.warn("firebase-applet-config.json not found in expected locations.");
         return;
       }
-      const firebaseConfig = await response.json();
       
-      app = initializeApp(firebaseConfig);
-      db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+      app = initializeApp(config);
+      db = getFirestore(app, config.firestoreDatabaseId);
       auth = getAuth(app);
     } catch (e) {
-      console.error("Firebase init failed:", e);
+      console.error("Firebase init failed error:", e);
     }
   }
 }
