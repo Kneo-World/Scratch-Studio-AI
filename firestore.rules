@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) 
+             && data.keys().size() == 3
+             && data.uid == request.auth.uid
+             && data.email is string
+             && data.createdAt is string;
+    }
+
+    // --- Collections ---
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      // Deny update/delete to keep profile immutable for now as per blueprint
+    }
+
+    match /stats/global {
+      allow read: if true;
+      // Allow incrementing userCount only when a new user is created.
+      // Note: In a production app, this would ideally be a Cloud Function 
+      // trigger after user creation to prevent client-side abuse.
+      // For now, we allow update if the user is signed in.
+      allow create, update: if isSignedIn() 
+        && request.resource.data.userCount is number;
+    }
+  }
+}

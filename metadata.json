@@ -1,0 +1,5 @@
+{
+  "name": "Scratch AI Generator",
+  "description": "Generate functional Scratch projects from text prompts using AI.",
+  "requestFramePermissions": []
+}
