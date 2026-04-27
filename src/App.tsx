@@ -150,13 +150,13 @@ export default function App() {
     try {
       const auth = getAuthClient();
       if (!auth) {
-        setError("Firebase не настроен.");
+        setError("Firebase не настроен. Проверьте наличие firebase-applet-config.json в корне вашего сайта!");
         return;
       }
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (err) {
-      setError("Ошибка входа через Google.");
+      setError("Ошибка входа через Google. Убедитесь, что домен вашего сайта добавлен в Authorized Domains в Firebase Console.");
     }
   };
 
@@ -803,3 +803,4 @@ export default function App() {
     </div>
   );
 }
+
